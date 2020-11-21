@@ -15,7 +15,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 /*!
-* xhtml-engine v2.0.1
+* xhtml-engine v3.0.0
 * (c) 2020-2020 心叶 git+https://github.com/yelloxing/xhtml-engine.git
 * License: MIT
 */
@@ -115,7 +115,37 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     // 空白字符:http://www.w3.org/TR/css3-selectors/#whitespace
     blankReg: new RegExp("[\\x20\\t\\r\\n\\f]"),
     blanksReg: /^[\x20\t\r\n\f]{0,}$/
-  }; // 分析结点的属性
+  };
+  var toString$1 = Object.prototype.toString;
+  /**
+   * 获取一个值的类型字符串[object type]
+   *
+   * @param {*} value 需要返回类型的值
+   * @returns {string} 返回类型字符串
+   */
+
+  function getType$1(value) {
+    if (value == null) {
+      return value === undefined ? '[object Undefined]' : '[object Null]';
+    }
+
+    return toString$1.call(value);
+  }
+  /**
+   * 判断一个值是不是String。
+   *
+   * @param {*} value 需要判断类型的值
+   * @returns {boolean} 如果是String返回true，否则返回false
+   */
+
+
+  function _isString(value) {
+    var type = _typeof(value);
+
+    return type === 'string' || type === 'object' && value != null && !Array.isArray(value) && getType$1(value) === '[object String]';
+  }
+
+  var isString$1 = _isString; // 分析结点的属性
 
   function analyseTag(attrString) {
     var attr = {},
@@ -232,8 +262,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      * 4.text             { tagName:'text',     type:'textcode' }                文本结点
      * 5.<!-- text -->    { tagName:'text',     type:'comment'  }                注释
      * 6.<!DOCTYPE text>  { tagName:'text',     type:'DOCTYPE'  }                声明
-     * 
-     * 
+     *
+     *
      */
 
 
@@ -464,14 +494,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
     });
     return tagArray;
-  }; // 获取一棵DOM树
+  };
+  /*!
+   * 🔪 - 解析xhtml为json对象返回
+   * https://github.com/hai2007/algorithm.js/blob/master/xhtmlToJson.js
+   *
+   * author hai2007 < https://hai2007.gitee.io/sweethome >
+   *
+   * Copyright (c) 2020-present hai2007 走一步，再走一步。
+   * Released under the MIT license
+   */
+  // 获取一棵DOM树
   // noIgnore为true表示不忽略任何标签
 
 
-  function DomTree(template, noIgnore) {
-    if (!isString(template)) throw new Error("Template must be a String!"); // 获取读取下一个标签对象
+  function xhtmlToJson(template, noIgnore) {
+    if (!isString$1(template)) throw new Error("Template must be a String!"); // 获取读取下一个标签对象
 
-    var nextTag = nextTagFun(template);
+    var nextTag = nextTagFun(template.trim());
     var tag = nextTag(),
         DomTree = [];
 
@@ -490,18 +530,18 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     DomTree = analyseDeep(DomTree);
     /**
-     * 模仿浏览器构建的一棵树,每个节点有如下属性：
-     * 
+     * 模仿浏览器构建的一棵树,每个结点有如下属性：
+     *
      * 1.parentNode index  父结点
      * 2.childNodes []     孩子结点
      * 3.preNode    index  前一个兄弟结点
      * 4.nextNode   index  后一个兄弟结点
-     * 
+     *
      * 5.attrs:{}          当前结点的属性
      * 6.name              节点名称
      * 7.type              节点类型（tag和text）
      * 8.content           文本结点内容
-     * 
+     *
      * 需要注意的是：如果一个文本结点内容只包含回车，tab，空格等空白字符，会直接被忽视
      */
 
@@ -847,7 +887,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     if (this.length <= 0) throw new Error('Null pointer!'); // 设置
 
     if (isString(HTMLtemplate)) {
-      setTemplate(this, DomTree("<null-engine-frame>" + HTMLtemplate + "</null-engine-frame>"));
+      setTemplate(this, xhtmlToJson("<null-engine-frame>" + HTMLtemplate + "</null-engine-frame>"));
       return this;
     } // 获取
     else {
@@ -867,7 +907,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     if (this.length <= 0) throw new Error('Null pointer!'); // 设置
 
     if (isString(HTMLtemplate)) {
-      setTemplate(this, DomTree(HTMLtemplate));
+      setTemplate(this, xhtmlToJson(HTMLtemplate));
       return this;
     } // 获取
     else {
@@ -893,7 +933,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
   Engine.prototype.init = function (template, indexs) {
     // 维护内置的tree
-    this.__DomTree__ = isArray(template) ? template : DomTree(template); // 记录当前查询到的结点
+    this.__DomTree__ = isArray(template) ? template : xhtmlToJson(template); // 记录当前查询到的结点
 
     if (isArray(indexs)) {
       for (var i = 0; i < indexs.length; i++) {

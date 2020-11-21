@@ -1,6 +1,6 @@
 import isArray from '@yelloxing/core.js/isArray';
 import isString from '@yelloxing/core.js/isString';
-import DomTree from './DomTree/entry.inner';
+import xhtmlToJson from '@hai2007/algorithm/xhtmlToJson.js';
 
 let Engine = function (template, indexs) {
   return new Engine.prototype.init(template, indexs);
@@ -9,7 +9,7 @@ let Engine = function (template, indexs) {
 Engine.prototype.init = function (template, indexs) {
 
   // 维护内置的tree
-  this.__DomTree__ = isArray(template) ? template : DomTree(template);
+  this.__DomTree__ = isArray(template) ? template : xhtmlToJson(template);
 
   // 记录当前查询到的结点
   if (isArray(indexs)) {

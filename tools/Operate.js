@@ -1,6 +1,6 @@
 import { getTemplate, setTemplate } from './_template';
 import isString from '@yelloxing/core.js/isString';
-import DomTree from '../DomTree/entry.inner';
+import xhtmlToJson from '@hai2007/algorithm/xhtmlToJson.js';
 
 // 获取或设置innerHTML
 export function innerHTML(HTMLtemplate) {
@@ -9,7 +9,7 @@ export function innerHTML(HTMLtemplate) {
     // 设置
     if (isString(HTMLtemplate)) {
 
-        setTemplate(this, DomTree("<null-engine-frame>" + HTMLtemplate + "</null-engine-frame>"));
+        setTemplate(this, xhtmlToJson("<null-engine-frame>" + HTMLtemplate + "</null-engine-frame>"));
         return this;
     }
 
@@ -29,7 +29,7 @@ export function outerHTML(HTMLtemplate) {
 
     // 设置
     if (isString(HTMLtemplate)) {
-        setTemplate(this, DomTree(HTMLtemplate));
+        setTemplate(this, xhtmlToJson(HTMLtemplate));
         return this;
     }
 

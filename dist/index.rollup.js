@@ -1,5 +1,5 @@
 /*!
-* xhtml-engine v2.0.1
+* xhtml-engine v3.0.0
 * (c) 2020-2020 心叶 git+https://github.com/yelloxing/xhtml-engine.git
 * License: MIT
 */
@@ -101,112 +101,140 @@
 
     var $RegExp = {
 
-      // 空白字符:http://www.w3.org/TR/css3-selectors/#whitespace
-      blankReg: new RegExp("[\\x20\\t\\r\\n\\f]"),
-      blanksReg: /^[\x20\t\r\n\f]{0,}$/
+        // 空白字符:http://www.w3.org/TR/css3-selectors/#whitespace
+        blankReg: new RegExp("[\\x20\\t\\r\\n\\f]"),
+        blanksReg: /^[\x20\t\r\n\f]{0,}$/
 
     };
 
+    const toString$1 = Object.prototype.toString;
+
+    /**
+     * 获取一个值的类型字符串[object type]
+     *
+     * @param {*} value 需要返回类型的值
+     * @returns {string} 返回类型字符串
+     */
+    function getType$1 (value) {
+        if (value == null) {
+            return value === undefined ? '[object Undefined]' : '[object Null]';
+        }
+        return toString$1.call(value);
+    }
+
+    /**
+     * 判断一个值是不是String。
+     *
+     * @param {*} value 需要判断类型的值
+     * @returns {boolean} 如果是String返回true，否则返回false
+     */
+    function _isString (value) {
+        const type = typeof value;
+        return type === 'string' || (type === 'object' && value != null && !Array.isArray(value) && getType$1(value) === '[object String]');
+    }
+
+    let isString$1 = _isString;
+
     // 分析结点的属性
     function analyseTag (attrString) {
-      let attr = {}, index = 0;
+        let attr = {}, index = 0;
 
-      attrString = attrString.trim();
+        attrString = attrString.trim();
 
-      let getOneAttr = function () {
+        let getOneAttr = function () {
 
-        // 属性名和属性值
-        let attrName = "", attrValue = "";
+            // 属性名和属性值
+            let attrName = "", attrValue = "";
 
-        // 先寻找属性名
-        for (; index < attrString.length; index++) {
+            // 先寻找属性名
+            for (; index < attrString.length; index++) {
 
-          // 寻找属性名的时候遇到空白或结尾的时候，肯定没有属性值
-          if ($RegExp.blanksReg.test(attrString[index]) || index == attrString.length - 1) {
+                // 寻找属性名的时候遇到空白或结尾的时候，肯定没有属性值
+                if ($RegExp.blanksReg.test(attrString[index]) || index == attrString.length - 1) {
 
-            attrName += attrString[index];
+                    attrName += attrString[index];
 
-            // 如果属性名是空白，就不需要记录了
-            if (!$RegExp.blanksReg.test(attrName)) {
-              attr[attrName.trim()] = "";
-            }
-            index += 1;
-            break;
+                    // 如果属性名是空白，就不需要记录了
+                    if (!$RegExp.blanksReg.test(attrName)) {
+                        attr[attrName.trim()] = "";
+                    }
+                    index += 1;
+                    break;
 
-          }
-
-          // 如果遇到等号，说明属性名寻找结束了
-          else if (attrString[index] == '=') {
-
-            // 接着寻找属性值
-            index += 1;
-
-            // 由于属性可能由引号包裹或直接暴露
-            let preCode = null, preLeng = -1;
-
-            // 如果是由'或者"包裹
-            if (attrString.substr(index, 1) == '"' || attrString.substr(index, 1) == "'") {
-              preCode = attrString.substr(index, 1);
-              preLeng = 1;
-              index += 1;
-            }
-
-            // 如果是由\'或\"包裹
-            else if (attrString.substr(index, 2) == '\"' || attrString.substr(index, 2) == "\'") {
-              preCode = attrString.substr(index, 2);
-              preLeng = 2;
-              index += 2;
-            }
-
-            // 开始正式寻找属性值
-
-            // 如果没有包裹，是直接暴露在外面的
-            // 我们寻找到空格或结尾即可
-            if (preCode !== null) {
-
-              for (; index < attrString.length; index++) {
-                if (attrString.substr(index, preLeng) == preCode) {
-                  attr[attrName.trim()] = attrValue.trim();
-                  index += 2;
-                  break;
-                } else {
-                  attrValue += attrString[index];
                 }
-              }
 
-            }
+                // 如果遇到等号，说明属性名寻找结束了
+                else if (attrString[index] == '=') {
 
-            // 如果是包裹的
-            // 我们确定寻找到对应的包裹闭合即可
-            else {
-              for (; index < attrString.length; index++) {
-                if ($RegExp.blanksReg.test(attrString[index])) {
-                  attr[attrName.trim()] = attrValue.trim();
-                  index += 1;
-                  break;
+                    // 接着寻找属性值
+                    index += 1;
+
+                    // 由于属性可能由引号包裹或直接暴露
+                    let preCode = null, preLeng = -1;
+
+                    // 如果是由'或者"包裹
+                    if (attrString.substr(index, 1) == '"' || attrString.substr(index, 1) == "'") {
+                        preCode = attrString.substr(index, 1);
+                        preLeng = 1;
+                        index += 1;
+                    }
+
+                    // 如果是由\'或\"包裹
+                    else if (attrString.substr(index, 2) == '\"' || attrString.substr(index, 2) == "\'") {
+                        preCode = attrString.substr(index, 2);
+                        preLeng = 2;
+                        index += 2;
+                    }
+
+                    // 开始正式寻找属性值
+
+                    // 如果没有包裹，是直接暴露在外面的
+                    // 我们寻找到空格或结尾即可
+                    if (preCode !== null) {
+
+                        for (; index < attrString.length; index++) {
+                            if (attrString.substr(index, preLeng) == preCode) {
+                                attr[attrName.trim()] = attrValue.trim();
+                                index += 2;
+                                break;
+                            } else {
+                                attrValue += attrString[index];
+                            }
+                        }
+
+                    }
+
+                    // 如果是包裹的
+                    // 我们确定寻找到对应的包裹闭合即可
+                    else {
+                        for (; index < attrString.length; index++) {
+                            if ($RegExp.blanksReg.test(attrString[index])) {
+                                attr[attrName.trim()] = attrValue.trim();
+                                index += 1;
+                                break;
+                            } else {
+                                attrValue += attrString[index];
+                            }
+                        }
+                    }
+
+                    break;
+
                 } else {
-                  attrValue += attrString[index];
+                    attrName += attrString[index];
                 }
-              }
             }
 
-            break;
+            // 如果还有字符串，继续解析
+            if (index < attrString.length) {
+                getOneAttr();
+            }
 
-          } else {
-            attrName += attrString[index];
-          }
-        }
+        };
 
-        // 如果还有字符串，继续解析
-        if (index < attrString.length) {
-          getOneAttr();
-        }
+        getOneAttr();
 
-      };
-
-      getOneAttr();
-
-      return attr;
+        return attr;
     }
 
     function nextTagFun (template) {
@@ -244,8 +272,8 @@
          * 4.text             { tagName:'text',     type:'textcode' }                文本结点
          * 5.<!-- text -->    { tagName:'text',     type:'comment'  }                注释
          * 6.<!DOCTYPE text>  { tagName:'text',     type:'DOCTYPE'  }                声明
-         * 
-         * 
+         *
+         *
          */
         return function () {
 
@@ -424,102 +452,112 @@
     // 也就是不用再区分开始或闭合了
     function analyseDeep (tagArray) {
 
-      // 闭合标签
-      tagArray = closeTag(tagArray);
+        // 闭合标签
+        tagArray = closeTag(tagArray);
 
-      let deep = 0, tagDeepArray = [];
+        let deep = 0, tagDeepArray = [];
 
-      tagArray.forEach(tag => {
+        tagArray.forEach(tag => {
 
-        if (tag.type == 'beginTag') {
+            if (tag.type == 'beginTag') {
 
-          tagDeepArray.push({
-            type: "tag",
-            name: tag.tagName,
-            attrs: tag.attrs,
-            __deep__: ++deep,
-            __tagType__: "double"
-          });
+                tagDeepArray.push({
+                    type: "tag",
+                    name: tag.tagName,
+                    attrs: tag.attrs,
+                    __deep__: ++deep,
+                    __tagType__: "double"
+                });
 
-        } else if (tag.type == 'endTag') {
+            } else if (tag.type == 'endTag') {
 
-          deep -= 1;
+                deep -= 1;
 
 
-        } else if (tag.type == 'textcode') {
+            } else if (tag.type == 'textcode') {
 
-          // 如果是文本
-          tagDeepArray.push({
-            type: "text",
-            content: tag.tagName,
-            __deep__: deep + 1
-          });
+                // 如果是文本
+                tagDeepArray.push({
+                    type: "text",
+                    content: tag.tagName,
+                    __deep__: deep + 1
+                });
 
-        } else if (tag.type == 'comment') {
+            } else if (tag.type == 'comment') {
 
-          // 如果是注释
-          tagDeepArray.push({
-            type: "comment",
-            content: tag.tagName,
-            __deep__: deep + 1
-          });
+                // 如果是注释
+                tagDeepArray.push({
+                    type: "comment",
+                    content: tag.tagName,
+                    __deep__: deep + 1
+                });
 
-        } else {
+            } else {
 
-          // 如果是自闭合结点
-          tagDeepArray.push({
-            type: "tag",
-            name: tag.tagName,
-            attrs: tag.attrs,
-            __deep__: deep + 1,
-            __tagType__: "single"
-          });
+                // 如果是自闭合结点
+                tagDeepArray.push({
+                    type: "tag",
+                    name: tag.tagName,
+                    attrs: tag.attrs,
+                    __deep__: deep + 1,
+                    __tagType__: "single"
+                });
 
-        }
+            }
 
-      });
+        });
 
-      return tagDeepArray;
+        return tagDeepArray;
 
     }
     // 标记所有没有闭合结点的直接自闭合
     let closeTag = function (tagArray) {
 
-      let needClose = [];
+        let needClose = [];
 
-      tagArray.forEach((tag, i) => {
-        if (tag.type == 'beginTag') {
+        tagArray.forEach((tag, i) => {
+            if (tag.type == 'beginTag') {
 
-          needClose.push([i, tag.tagName]);
+                needClose.push([i, tag.tagName]);
 
-        } else if (tag.type == 'endTag') {
+            } else if (tag.type == 'endTag') {
 
-          while (needClose.length > 0) {
+                while (needClose.length > 0) {
 
-            let needCloseTag = needClose.pop();
+                    let needCloseTag = needClose.pop();
 
-            if (needCloseTag[1] == tag.tagName) {
-              break;
-            } else {
-              tagArray[needCloseTag[0]].type = 'fullTag';
+                    if (needCloseTag[1] == tag.tagName) {
+                        break;
+                    } else {
+                        tagArray[needCloseTag[0]].type = 'fullTag';
+                    }
+
+                }
+
             }
+        });
 
-          }
-
-        }
-      });
-
-      return tagArray;
+        return tagArray;
     };
+
+    /*!
+     * 🔪 - 解析xhtml为json对象返回
+     * https://github.com/hai2007/algorithm.js/blob/master/xhtmlToJson.js
+     *
+     * author hai2007 < https://hai2007.gitee.io/sweethome >
+     *
+     * Copyright (c) 2020-present hai2007 走一步，再走一步。
+     * Released under the MIT license
+     */
 
     // 获取一棵DOM树
     // noIgnore为true表示不忽略任何标签
-    function DomTree (template, noIgnore) {
+    function xhtmlToJson (template, noIgnore) {
 
-        if (!isString(template)) throw new Error("Template must be a String!");
+        if (!isString$1(template)) throw new Error("Template must be a String!");
 
         // 获取读取下一个标签对象
-        let nextTag = nextTagFun(template);
+        let nextTag = nextTagFun(template.trim());
 
         let tag = nextTag(), DomTree = [];
         while (tag != null) {
@@ -542,18 +580,18 @@
         DomTree = analyseDeep(DomTree);
 
         /**
-         * 模仿浏览器构建的一棵树,每个节点有如下属性：
-         * 
+         * 模仿浏览器构建的一棵树,每个结点有如下属性：
+         *
          * 1.parentNode index  父结点
          * 2.childNodes []     孩子结点
          * 3.preNode    index  前一个兄弟结点
          * 4.nextNode   index  后一个兄弟结点
-         * 
+         *
          * 5.attrs:{}          当前结点的属性
          * 6.name              节点名称
          * 7.type              节点类型（tag和text）
          * 8.content           文本结点内容
-         * 
+         *
          * 需要注意的是：如果一个文本结点内容只包含回车，tab，空格等空白字符，会直接被忽视
          */
 
@@ -934,7 +972,7 @@
         // 设置
         if (isString(HTMLtemplate)) {
 
-            setTemplate(this, DomTree("<null-engine-frame>" + HTMLtemplate + "</null-engine-frame>"));
+            setTemplate(this, xhtmlToJson("<null-engine-frame>" + HTMLtemplate + "</null-engine-frame>"));
             return this;
         }
 
@@ -953,7 +991,7 @@
 
         // 设置
         if (isString(HTMLtemplate)) {
-            setTemplate(this, DomTree(HTMLtemplate));
+            setTemplate(this, xhtmlToJson(HTMLtemplate));
             return this;
         }
 
@@ -981,7 +1019,7 @@
     Engine.prototype.init = function (template, indexs) {
 
       // 维护内置的tree
-      this.__DomTree__ = isArray(template) ? template : DomTree(template);
+      this.__DomTree__ = isArray(template) ? template : xhtmlToJson(template);
 
       // 记录当前查询到的结点
       if (isArray(indexs)) {
